@@ -1,0 +1,3 @@
+mutation {
+    N0 :deleteCard(input:{id: "..."}){ clientMutationId }
+}

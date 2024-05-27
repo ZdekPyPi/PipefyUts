@@ -1,0 +1,20 @@
+{
+
+ organizations(ids: "$org_id$") {
+
+  members {
+
+    user {
+			id
+      
+      name
+
+      email
+
+    }
+
+  }
+
+}
+
+}

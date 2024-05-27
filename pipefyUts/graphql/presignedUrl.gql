@@ -1,0 +1,6 @@
+mutation {
+    createPresignedUrl(input: { organizationId: $org_id$, fileName: "$file_name$" }){
+        clientMutationId
+        url
+    }
+}

@@ -1,0 +1,3 @@
+
+global-include *.txt *.py *.md *.gql
+exclude .pypirc

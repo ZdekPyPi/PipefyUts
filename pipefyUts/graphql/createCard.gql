@@ -1,0 +1,14 @@
+mutation mut{
+  createCard(input:{
+    title:"$title$",
+    pipe_id: "$pipe_id$",
+    fields_attributes:[
+        $fields$
+    ]
+  }
+  ){
+    card{
+      id
+    }
+  }
+}

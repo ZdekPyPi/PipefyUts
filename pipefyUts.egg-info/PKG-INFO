@@ -1,3 +1,21 @@
+Metadata-Version: 2.1
+Name: pipefyUts
+Version: 1.0.7
+Summary: Pipefy manipulator
+Home-page: 
+Author: Melque Lima
+Author-email: melque_ex@yahoo.com.br
+License: MIT
+Keywords: pipefyUts
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Education
+Classifier: Operating System :: Microsoft :: Windows :: Windows 10
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Description-Content-Type: text/markdown
+License-File: LICENCE.txt
+Requires-Dist: requests
+
 # PipefyUts
 #
 ### Installation
@@ -145,3 +163,35 @@ pfy.createCard(card=myNewCard)
 pfy.deleteCard(card_id="<card_id>")
 
 ```
+
+Change Log
+==========
+
+1.0.0 (2023-04-26)
+------------------
+- First Release
+
+1.0.1 (2023-04-26)
+------------------
+- Bug Fixed
+
+1.0.2 (2023-04-26)
+------------------
+- Upercase Bug Fixed
+
+1.0.3 (2023-04-26)
+------------------
+- Upercase Write Bug Fixed
+
+1.0.4 (2023-04-28)
+------------------
+- Update Class bug fixed
+
+1.0.6 (2023-04-28)
+------------------
+- empty_as_null
+
+
+1.0.7 (2023-04-28)
+------------------
+- changing enviornment

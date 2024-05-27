@@ -1,0 +1,9 @@
+
+query MyQuery {
+  pipe(id: "$pipe_id$") {
+    start_form_fields {
+      label
+      id
+    }
+  }
+}
