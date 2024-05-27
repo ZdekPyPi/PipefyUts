@@ -47,19 +47,22 @@ class NewCard:
     graph_folder = os.path.join(pathlib.Path(__file__).parent.resolve(),"graphql")
     used_fields = None
 
-    # def __new__(cls,*args,**kwargs):
-    #     instance = super(NewCard, cls).__new__(cls)
-    #     #instance.__init__(**kwargs)
-    #     # if isinstance(instance, Filho):
-    #     #     print("Filho foi instanciado")
-    #     return instance
-    #     # pass
+    def __new__(cls,*args,**kwargs):
+        instance = super(NewCard, cls).__new__(cls)
+        #instance.__init__(**kwargs)
+        # if isinstance(instance, Filho):
+        #     print("Filho foi instanciado")
+        instance.validateRequired(**kwargs)
+        instance.validateFields(**kwargs)
+        instance.setFields(**kwargs)
+        return instance
+        # pass
 
-    def __init__(self,**kwargs):
-        self.validateRequired(**kwargs)
-        self.validateFields(**kwargs)
-        self.setFields(**kwargs)
-        pass
+    # def __init__(self,**kwargs):
+    #     self.validateRequired(**kwargs)
+    #     self.validateFields(**kwargs)
+    #     self.setFields(**kwargs)
+    #     pass
 
     def setFields(self,**kwargs):
         

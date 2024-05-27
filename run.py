@@ -45,7 +45,8 @@ class PerdaFinanceiraCard(DefaultCardInfo):
     n_do_pedido_obrigat_rio                = CardField(str)
 
 
-    #def __init__(self,**kwargs): NewCard.__init__(self,**kwargs)
+    def __init__(self,**kwargs):
+        pass
 
 class Dias180Card(DefaultCardInfo):
 
