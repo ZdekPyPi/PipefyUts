@@ -10,7 +10,7 @@ classifiers = [
  
 setup(
   name='pipefyUts',
-  version='1.0.8',
+  version='1.0.9',
   description='Pipefy manipulator',
   long_description=open('README.md').read() + '\n\n' + open('CHANGELOG.txt').read(),
   long_description_content_type='text/markdown',

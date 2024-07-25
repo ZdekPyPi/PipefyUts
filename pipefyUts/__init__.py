@@ -3,6 +3,7 @@ import json
 import os
 import pathlib
 from .card import *
+from urllib.parse import unquote
 
 import urllib3
 urllib3.disable_warnings()
@@ -51,7 +52,7 @@ class Pipefy:
             raise Exception(req.text)
 
 
-        return url.split("?")[0].replace("https://pipefy-prd-us-east-1.s3.amazonaws.com/","")
+        return unquote(url.split("?")[0].replace("https://pipefy-prd-us-east-1.s3.amazonaws.com/",""))
 
     def listStartFormFields(self,pipe_id):
 

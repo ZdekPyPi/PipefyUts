@@ -91,41 +91,55 @@ myNewCard = PerdaFinanceiraCard(
 
 
 
-cd_id = pfy.createCard(card=myNewCard)
+# cd_id = pfy.createCard(card=myNewCard)
 
 
-pfy.deleteCard(cd_id.get("id"))
+# pfy.deleteCard(cd_id.get("id"))
 
 
 
-pfy.listMembers()
+# pfy.listMembers()
 
-pfy.listStartFormFields(pipe_id="1025104")
+# pfy.listStartFormFields(pipe_id="1025104")
 
-pfy.listCardsFromPhase(phase_id="325918208")
+# pfy.listCardsFromPhase(phase_id="325918208")
 
 
 
 class MyCard(NewCard):
     #DEFAULT
-    __title__                = "MyCardTitle"
-    __pipeid__               = "304282374"
+    __pipeid__               = "302671790"
+    __title__                = "Teste"
 
     #PIPEFY FIELDS
-    descricao                = CardField(str,default="Teste")
-    valor_total              = CardField(float)
-    respons_vel_pela_an_lise = CardField(list)
-    arquivos                 = CardField(list,is_file_path=True)
+    rfp                                           = CardField(str)
+    product_service_needed                        = CardField(str)
+    describe_your_request                         = CardField(str)
+    define_the_requirements_of_the_ideal_supplier = CardField(str)
+    due_date                                      = CardField(str)
+    assignee_name                                 = CardField(str)
+    primary_contact_email                         = CardField(str)
+    copy_of_primary_contact_email                 = CardField(str)
+    documents                                     = CardField(list,is_file_path=True)
 
-    def __init__(self,**kwargs): NewCard.__init__(self,**kwargs)
+    
 
+
+files = [
+"D:/Git/Orgs/Dumonde/BidControlSystem/backend/rfps/rfps_baixadas/W912JV-24-Q0031/2024-07-24 1645/Attachment 1 Medford YRRP PWS V2.pdf",
+]
 
 myNewCard = MyCard(
-    # descricao                = "Teste",
-    valor_total              = 1234567.89,
-    respons_vel_pela_an_lise = ["301975616"],
-    arquivos                 = [r"C:\Users\melque\Documents\Doc1.pdf"]
-)
+      rfp                                           = "TEST",
+      product_service_needed                        = "TEST",
+      describe_your_request                         = "OLÁ",
+      define_the_requirements_of_the_ideal_supplier = "TEST",
+      due_date                                      = "2024-01-01 00:00",
+      assignee_name                                 = "TEST",
+      primary_contact_email                         = "TEST",
+      copy_of_primary_contact_email                 = "TEST",
+      documents                                     = files
+  )
 
 pfy.createCard(card=myNewCard)
 
