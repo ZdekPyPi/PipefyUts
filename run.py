@@ -138,7 +138,7 @@ myNewCard = MyCard(
       assignee_name                                 = "TEST",
       primary_contact_email                         = "TEST",
       copy_of_primary_contact_email                 = "TEST",
-      documents                                     = files
+      documents                                     = []
   )
 
 pfy.createCard(card=myNewCard)

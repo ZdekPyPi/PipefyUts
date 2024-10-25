@@ -118,3 +118,13 @@ class Pipefy:
         query = f'mutation {{ N0 :deleteCard(input:{{id: "{card_id}"}}){{ clientMutationId }}}}'
         return self.runQuery(query)["data"]["N0"]["clientMutationId"]
 
+    def moveCard(self,card_id:str,phase_id:str):
+        query = f'mutation {{moveCardToPhase(input: {{card_id: "{card_id}", destination_phase_id: "{phase_id}"}}){{card{{id}}}}}}'
+        return self.runQuery(query)
+
+
+    def updateFieldValue(self,card_id:str,field_id:str,value):
+        val = f'"{value}"' if isinstance(value,str) else value
+        val = json.dumps(val) if isinstance(val,list) else val
+        query = f'mutation {{updateFieldsValues(input: {{nodeId: "{card_id}", values: [{{fieldId: "{field_id}", value: {val}}}]}}){{success}}}}'
+        return self.runQuery(query)
