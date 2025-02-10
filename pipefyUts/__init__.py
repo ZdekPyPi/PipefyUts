@@ -3,7 +3,8 @@ import json
 import os
 import pathlib
 from .card import *
-from urllib.parse import unquote
+from urllib.parse import unquote,urlparse
+
 
 import urllib3
 urllib3.disable_warnings()
@@ -137,3 +138,20 @@ class Pipefy:
         val = json.dumps(val) if isinstance(val,list) else val
         query = f'mutation {{updateFieldsValues(input: {{nodeId: "{card_id}", values: [{{fieldId: "{field_id}", value: {val}}}]}}){{success}}}}'
         return self.runQuery(query)
+    
+    def downloadFile(self, file_path,destination):
+        req = requests.get(file_path,headers=self.headers,stream=True,verify=False)
+
+        #VERIFICA SE O REQUEST DEU ERRO
+        if req.status_code != 200:
+            raise Exception(req.text)
+        
+        file_name = urlparse(req.url).path.split("/")[-1]
+        file_addr = os.path.join(destination, file_name)
+
+        with open(file_addr, "wb") as file:
+            for chunk in req.iter_content(1024):
+                file.write(chunk)
+
+        return file_addr
+

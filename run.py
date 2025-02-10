@@ -4,6 +4,7 @@ import sys
 sys.path.append("./pipefyUts")
 from pipefyUts import Pipefy,NewCard,CardField
 import os
+import json
 
 load_dotenv(override=True)
 ORG_ID =  os.getenv("ORG_ID")
@@ -11,7 +12,17 @@ TOKEN  = os.getenv("TOKEN")
 
 pfy = Pipefy(ORG_ID,TOKEN)
 
+
+#fl = pfy.listCardsFromPhase("325917747")[0]["fields"][3]["value"]
+#fl = json.loads(fl)[0]
+
+#pfy.downloadFile(file_path=fl,destination=".")
+
+
 flds = pfy.listPhaseFormFields("325917746")
+
+
+
 
 class DefaultCardInfo(NewCard):
     #DEFAULT
