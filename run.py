@@ -5,12 +5,13 @@ sys.path.append("./pipefyUts")
 from pipefyUts import Pipefy,NewCard,CardField
 import os
 
-load_dotenv()
+load_dotenv(override=True)
 ORG_ID =  os.getenv("ORG_ID")
 TOKEN  = os.getenv("TOKEN")
 
 pfy = Pipefy(ORG_ID,TOKEN)
 
+flds = pfy.listPhaseFormFields("325917746")
 
 class DefaultCardInfo(NewCard):
     #DEFAULT

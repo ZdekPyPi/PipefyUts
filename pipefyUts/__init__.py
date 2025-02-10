@@ -62,6 +62,15 @@ class Pipefy:
         data = self.runQuery(query)
 
         return data.get("data").get("pipe").get("start_form_fields")
+    
+    def listPhaseFormFields(self,phase_id):
+
+        query = open(os.path.join(self.graph_folder,"listPhaseFormFields.gql"),'r').read()
+        query = query.replace("$phase_id$",phase_id)
+
+        data = self.runQuery(query)
+
+        return data.get("data").get("phase").get("fields")
 
     def listCardsFromPhase(self,phase_id,nextPage=None):
         

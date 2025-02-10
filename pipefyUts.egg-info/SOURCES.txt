@@ -16,5 +16,6 @@ pipefyUts/graphql/createCard.gql
 pipefyUts/graphql/deleteCards.gql
 pipefyUts/graphql/listCardsFromPhase.gql
 pipefyUts/graphql/listMembers.gql
+pipefyUts/graphql/listPhaseFormFields.gql
 pipefyUts/graphql/listStartFormFields.gql
 pipefyUts/graphql/presignedUrl.gql

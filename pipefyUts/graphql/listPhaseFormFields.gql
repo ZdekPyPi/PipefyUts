@@ -1,7 +1,6 @@
-
-query MyQuery {
-  pipe(id: "$pipe_id$") {
-    start_form_fields {
+query MyQuery{
+  phase(id: "$phase_id$") {
+    fields {
       id
       label
       type
