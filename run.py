@@ -12,6 +12,8 @@ TOKEN  = os.getenv("TOKEN")
 
 pfy = Pipefy(ORG_ID,TOKEN)
 
+pfy.getCard(card_id="1073985135")
+
 
 #fl = pfy.listCardsFromPhase("325917747")[0]["fields"][3]["value"]
 #fl = json.loads(fl)[0]

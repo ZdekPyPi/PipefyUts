@@ -1,0 +1,8 @@
+mutation{
+  updateCard(input: {id: "$card_id$", label_ids: $label_ids$}) {
+    card {
+      id
+      title
+    }
+  }
+}

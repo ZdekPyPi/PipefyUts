@@ -64,6 +64,24 @@ class Pipefy:
 
         return data.get("data").get("pipe").get("start_form_fields")
     
+    def getCard(self,card_id):
+
+        query = open(os.path.join(self.graph_folder,"getCard.gql"),'r').read()
+        query = query.replace("$card_id$",card_id)
+
+        data = self.runQuery(query)
+
+        return data.get("data").get("card")
+
+    def listPipeLabels(self,pipe_id):
+
+        query = open(os.path.join(self.graph_folder,"listPipeLabels.gql"),'r').read()
+        query = query.replace("$pipe_id$",pipe_id)
+
+        data = self.runQuery(query)
+
+        return data.get("data").get("pipe").get("labels")
+    
     def listPhaseFormFields(self,phase_id):
 
         query = open(os.path.join(self.graph_folder,"listPhaseFormFields.gql"),'r').read()
@@ -73,6 +91,16 @@ class Pipefy:
 
         return data.get("data").get("phase").get("fields")
 
+    def updateCardLabels(self,card_id,label_ids:list[int|str]):
+
+        query = open(os.path.join(self.graph_folder,"updateCardLabels.gql"),'r').read()
+        query = query.replace("$card_id$",card_id)
+        query = query.replace("$label_ids$",json.dumps(label_ids))
+
+        data = self.runQuery(query)
+
+        return "OK"
+    
     def listCardsFromPhase(self,phase_id,nextPage=None):
         
         nextPage = f'"{nextPage}"' if nextPage else 'null'

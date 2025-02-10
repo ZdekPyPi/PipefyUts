@@ -5,6 +5,13 @@ query{
         node {
           id
           created_at
+          createdBy {
+            id
+            name
+            __typename
+          }
+          labels { id name }
+          due_date
           fields {
             field {
               id
