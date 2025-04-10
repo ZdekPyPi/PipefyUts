@@ -9,6 +9,15 @@ query{
       }
       labels { id name }
       due_date
+      comments {
+      id
+      author {
+        id
+      }
+      author_name
+      created_at
+      text
+    }
       fields {
         field {
           id

@@ -12,7 +12,8 @@ TOKEN  = os.getenv("TOKEN")
 
 pfy = Pipefy(ORG_ID,TOKEN)
 
-pfy.getCard(card_id="1073985135")
+a = pfy.getCard(card_id="1118627367")
+#a.newComment("teste comentario")
 
 
 #fl = pfy.listCardsFromPhase("325917747")[0]["fields"][3]["value"]
@@ -20,6 +21,7 @@ pfy.getCard(card_id="1073985135")
 
 #pfy.downloadFile(file_path=fl,destination=".")
 
+a = pfy.listCardsFromPhase("337516328")
 
 flds = pfy.listPhaseFormFields("325917746")
 

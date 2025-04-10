@@ -14,8 +14,13 @@ pipefyUts.egg-info/requires.txt
 pipefyUts.egg-info/top_level.txt
 pipefyUts/graphql/createCard.gql
 pipefyUts/graphql/deleteCards.gql
+pipefyUts/graphql/deleteComment.gql
+pipefyUts/graphql/getCard.gql
 pipefyUts/graphql/listCardsFromPhase.gql
 pipefyUts/graphql/listMembers.gql
 pipefyUts/graphql/listPhaseFormFields.gql
+pipefyUts/graphql/listPipeLabels.gql
 pipefyUts/graphql/listStartFormFields.gql
+pipefyUts/graphql/newComment.gql
 pipefyUts/graphql/presignedUrl.gql
+pipefyUts/graphql/updateCardLabels.gql

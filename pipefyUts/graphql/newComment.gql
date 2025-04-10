@@ -1,0 +1,16 @@
+mutation {
+  createComment(input: {
+    card_id: $card_id$,
+    text: "$text$"
+  }) {
+    comment {
+      id
+      author {
+        id
+      }
+      author_name
+      created_at
+      text
+    }
+  }
+}

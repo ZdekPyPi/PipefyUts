@@ -1,6 +1,8 @@
 import pathlib
 import os
+from dateutil.parser import isoparse
 
+graph_folder = os.path.join(pathlib.Path(__file__).parent.resolve(),"graphql")
 
 #========================= CREATE CARD =======================
 class CardField:
@@ -38,10 +40,6 @@ class CardField:
                 elif self.list_sub_type == float and not isinstance(item,float):
                     raise Exception(f"invalid default value '{item}'")
 
-
-            
-
-        
 
 class NewCard:
     graph_folder = os.path.join(pathlib.Path(__file__).parent.resolve(),"graphql")
@@ -120,4 +118,79 @@ class NewCard:
                             raise Exception(f"invalid value '{item}'")
         pass
 
-      
+
+
+
+
+class Card:
+    __pfy__ = None
+
+    created_at = None
+    created_by = None
+    labels     = None
+    due_date   = None
+    id         = None
+    fields     = None
+    comments   = None
+
+    __raw__ = None
+
+    def __init__(self,pfy,dados:dict):
+        self.__pfy__    = pfy
+        self.__raw__    = dados.copy()
+        self.id         = dados.pop('id')
+        self.created_at = isoparse(dados.pop('created_at'))
+        self.created_by = dados.pop('createdBy')
+        self.due_date   = isoparse(dados.pop('due_date')) if dados['due_date'] else dados.pop('due_date')
+        self.fields     = {x['field']['id']:x['value'] for x in dados.pop('fields')}
+        self.comments   = [Comment(self.__pfy__,x) for x in dados.pop('comments')]
+        self.labels     = dados.pop('labels')
+
+        pass
+
+    def newComment(self,text):
+        query = open(os.path.join(graph_folder,"newComment.gql"),'r').read()
+        query = query.replace("$card_id$",self.id)
+        query = query.replace("$text$",text)
+
+        data = self.__pfy__.runQuery(query)
+        self.comments = [Comment(self.__pfy__,data["data"]["createComment"]["comment"])] + self.comments
+        return self.comments[0]
+
+
+        
+
+    
+    def __repr__(self):
+        return f'Card<{self.id}>'
+
+
+class Comment:
+    __pfy__ = None
+    
+    id          = None
+    author_id   = None
+    author_name = None
+    created_at  = None
+    text        = None
+
+    __raw__ = None
+
+    def __init__(self,pfy,dados):
+        self.__pfy__    = pfy
+        self.__raw__    = dados
+        self.id          = dados['id']
+        self.author_id   = dados['author']['id']
+        self.author_name = dados['author_name']
+        self.created_at  = isoparse(dados['created_at'])
+        self.text        = dados['text']
+        pass
+
+    def delete(self):
+        query = open(os.path.join(graph_folder,"deleteComment.gql"),'r').read()
+        query = query.replace("$comment_id$",self.id)
+        self.__pfy__.runQuery(query)
+        
+
+    def __repr__(self):
+        return f'Comment<{self.id}>'

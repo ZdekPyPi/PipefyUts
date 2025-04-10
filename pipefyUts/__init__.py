@@ -64,14 +64,20 @@ class Pipefy:
 
         return data.get("data").get("pipe").get("start_form_fields")
     
+    def formatCardFields(self,card_dict:dict):
+        data = {x['field']['id']:x['value'] for x in card_dict["fields"]}
+        card_dict["fields"] = data
+        return card_dict
+
     def getCard(self,card_id):
 
         query = open(os.path.join(self.graph_folder,"getCard.gql"),'r').read()
         query = query.replace("$card_id$",card_id)
 
         data = self.runQuery(query)
+        card = data.get("data").get("card")
 
-        return data.get("data").get("card")
+        return Card(self,card)
 
     def listPipeLabels(self,pipe_id):
 
@@ -101,7 +107,7 @@ class Pipefy:
 
         return "OK"
     
-    def listCardsFromPhase(self,phase_id,nextPage=None):
+    def listCardsFromPhase(self,phase_id,nextPage=None,format_fields=True):
         
         nextPage = f'"{nextPage}"' if nextPage else 'null'
         query = open(os.path.join(self.graph_folder,"listCardsFromPhase.gql"),'r').read()
@@ -109,10 +115,11 @@ class Pipefy:
         query = query.replace("$after$",nextPage)
 
         data = self.runQuery(query)
-        
+    
         cards = data["data"]["phase"]["cards"]
         next_page = cards["pageInfo"]["hasNextPage"]
         cards_filtered = [x.get("node") for x in cards["edges"]]
+        cards_filtered = [Card(self,card) for card in cards_filtered]
         if next_page:
             return cards_filtered+self.listCardsFromPhase(phase_id=phase_id,nextPage=cards["pageInfo"]["endCursor"])
         

@@ -1,0 +1,7 @@
+mutation {
+  deleteComment(input: {
+    id: $comment_id$
+  }) {
+    success
+  }
+}
