@@ -1,0 +1,5 @@
+query{
+    card(id:$card_id$){
+      labels { id name color}
+    }
+}

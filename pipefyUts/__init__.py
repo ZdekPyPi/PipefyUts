@@ -64,11 +64,6 @@ class Pipefy:
 
         return data.get("data").get("pipe").get("start_form_fields")
     
-    def formatCardFields(self,card_dict:dict):
-        data = {x['field']['id']:x['value'] for x in card_dict["fields"]}
-        card_dict["fields"] = data
-        return card_dict
-
     def getCard(self,card_id):
 
         query = open(os.path.join(self.graph_folder,"getCard.gql"),'r').read()
@@ -76,8 +71,16 @@ class Pipefy:
 
         data = self.runQuery(query)
         card = data.get("data").get("card")
+        card = Card(
+            self,
+            card["id"],
+            card["title"],
+            card["created_at"],
+            User(id=card["createdBy"]["id"],name=card["createdBy"]["name"]),
+            card.get("due_date")
+        )
 
-        return Card(self,card)
+        return card
 
     def listPipeLabels(self,pipe_id):
 
@@ -96,16 +99,6 @@ class Pipefy:
         data = self.runQuery(query)
 
         return data.get("data").get("phase").get("fields")
-
-    def updateCardLabels(self,card_id,label_ids:list[int|str]):
-
-        query = open(os.path.join(self.graph_folder,"updateCardLabels.gql"),'r').read()
-        query = query.replace("$card_id$",card_id)
-        query = query.replace("$label_ids$",json.dumps(label_ids))
-
-        data = self.runQuery(query)
-
-        return "OK"
     
     def listCardsFromPhase(self,phase_id,nextPage=None,format_fields=True):
         
@@ -119,7 +112,7 @@ class Pipefy:
         cards = data["data"]["phase"]["cards"]
         next_page = cards["pageInfo"]["hasNextPage"]
         cards_filtered = [x.get("node") for x in cards["edges"]]
-        cards_filtered = [Card(self,card) for card in cards_filtered]
+        cards_filtered = [Card(self,card["id"],card["title"],card["created_at"],User(id=card["createdBy"]["id"],name=card["createdBy"]["name"]),card.get("due_date")) for card in cards_filtered]
         if next_page:
             return cards_filtered+self.listCardsFromPhase(phase_id=phase_id,nextPage=cards["pageInfo"]["endCursor"])
         
@@ -128,8 +121,10 @@ class Pipefy:
     def listMembers(self):
         query = open(os.path.join(self.graph_folder,"listMembers.gql"),'r').read()
         query = query.replace("$org_id$",self.org_id)
-
-        data = self.runQuery(query)["data"]["organizations"][0]["members"]
+        data = self.runQuery(query)["data"]["organizations"]
+        if not data:
+            return None
+        data = data[0]["members"]
 
         return [x.get("user") for x in data]
         
@@ -159,21 +154,6 @@ class Pipefy:
 
         return self.runQuery(query)["data"]["createCard"]["card"]
 
-    def deleteCard(self,card_id:str):
-        query = f'mutation {{ N0 :deleteCard(input:{{id: "{card_id}"}}){{ clientMutationId }}}}'
-        return self.runQuery(query)["data"]["N0"]["clientMutationId"]
-
-    def moveCard(self,card_id:str,phase_id:str):
-        query = f'mutation {{moveCardToPhase(input: {{card_id: "{card_id}", destination_phase_id: "{phase_id}"}}){{card{{id}}}}}}'
-        return self.runQuery(query)
-
-
-    def updateFieldValue(self,card_id:str,field_id:str,value):
-        val = f'"{value}"' if isinstance(value,str) else value
-        val = json.dumps(val) if isinstance(val,list) else val
-        query = f'mutation {{updateFieldsValues(input: {{nodeId: "{card_id}", values: [{{fieldId: "{field_id}", value: {val}}}]}}){{success}}}}'
-        return self.runQuery(query)
-    
     def downloadFile(self, file_path,destination):
         req = requests.get(file_path,headers=self.headers,stream=True,verify=False)
 
@@ -189,4 +169,28 @@ class Pipefy:
                 file.write(chunk)
 
         return file_addr
+
+    def findCards(self,pipe_id,field_id:str,field_value:str):
+        query = open(os.path.join(self.graph_folder,"findCards.gql"),'r').read()
+        query = query.replace("$pipe_id$",pipe_id)
+        query = query.replace("$field_id$",field_id)
+        query = query.replace("$field_value$",field_value)
+
+        data = self.runQuery(query)
+        cards = data["data"]["findCards"]["edges"]
+
+        cards_to_return = []
+        for card in cards:
+            card = card.get("node")
+            cards_to_return.append(Card(
+                self,
+                card["id"],
+                card["title"],
+                card["created_at"],
+                User(id=card["createdBy"]["id"],name=card["createdBy"]["name"]),
+                card.get("due_date")
+            ))
+
+
+        return cards_to_return
 

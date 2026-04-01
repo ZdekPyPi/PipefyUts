@@ -1,0 +1,22 @@
+query {
+  findCards(
+    pipeId: $pipe_id$,
+    search: 
+      { fieldId: "$field_id$", fieldValue: "$field_value$" }
+    
+  ) {
+
+    edges {
+      node {
+        id
+        title
+        created_at
+        createdBy {
+        id
+        name
+      }
+        due_date
+      }
+    }
+  }
+}

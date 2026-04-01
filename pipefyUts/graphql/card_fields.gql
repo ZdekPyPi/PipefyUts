@@ -1,0 +1,12 @@
+query{
+    card(id:$card_id$){
+            fields {
+        field {
+          id
+          label
+          options
+        }
+        value
+      }
+    }
+}

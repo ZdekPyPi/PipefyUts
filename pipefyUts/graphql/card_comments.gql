@@ -1,12 +1,13 @@
 query{
     card(id:$card_id$){
+      comments {
       id
-      title
+      text
       created_at
-      createdBy {
+      author {
         id
         name
-      }   
-      due_date
+      }
+    }
     }
 }
