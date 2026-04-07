@@ -121,7 +121,7 @@ class MyCard(NewCard):
     #PIPEFY FIELDS
     description              = CardField(str)
     total_ammount            = CardField(float)
-    files                    = CardField(list)
+    owners                   = CardField(list)
     files                    = CardField(list,is_file_path=True)
 
 
@@ -132,7 +132,7 @@ class MyCard(NewCard):
 myNewCard = MyCard(
     description   = "AdtPro",
     total_ammount = 123.46,
-    files         = ["<owner_id>"],
+    owners        = ["<owner_id>"],
     files         = [r".\Doc1.pdf",r".\Doc2.txt"]
 )
 
