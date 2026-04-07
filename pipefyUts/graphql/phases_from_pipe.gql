@@ -1,0 +1,10 @@
+query {
+  pipe(id: $pipe_id$) {
+    id
+    name
+    phases {
+      id
+      name
+    }
+  }
+}

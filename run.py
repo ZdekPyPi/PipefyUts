@@ -12,19 +12,20 @@ TOKEN  = os.getenv("TOKEN")
 
 pfy = Pipefy(ORG_ID,TOKEN)
 
+card = pfy.getCard(card_id="1325994562")
+card.fields_from_phase('342691118')
 
-crd = Card(
-    pfy        = pfy,
-    card_id    = "1327926670",
-    title      = "Teste",
-    created_at = "2026-03-31T17:16:00Z",
-    created_by = User(id="302037798",name="Vanessa Correia da Silva"),
-    due_date   = "2026-03-31T23:33:47Z"
-)
+#307077421
 
-pfy.findCards(pipe_id="306528137",field_id="cnpj",field_value="04.601.397/0137-00")
+card.phase.fields_from_card()
 
-pfy.getCard(card_id="1327926670")
+card = pfy.findCards(pipe_id="306528137",field_id="cnpj",field_value="04.601.397/0137-00")[0]
+
+card.refresh()
+
+card.addLabels([316273823])
+
+pfy.getCard(card_id="1325994562")
 #crd.comments()
 
 crd.fields()

@@ -55,7 +55,7 @@ class Pipefy:
 
         return unquote(url.split("?")[0].replace("https://pipefy-prd-us-east-1.s3.amazonaws.com/",""))
 
-    def listStartFormFields(self,pipe_id):
+    def startFormFields(self,pipe_id):
 
         query = open(os.path.join(self.graph_folder,"listStartFormFields.gql"),'r').read()
         query = query.replace("$pipe_id$",pipe_id)
@@ -77,12 +77,33 @@ class Pipefy:
             card["title"],
             card["created_at"],
             User(id=card["createdBy"]["id"],name=card["createdBy"]["name"]),
+            Phase(self,card["current_phase"]["id"],card["current_phase"]["name"]),
             card.get("due_date")
         )
 
         return card
 
-    def listPipeLabels(self,pipe_id):
+    def phasesFromPipe(self,pipe_id):
+        query = open(os.path.join(self.graph_folder,"phases_from_pipe.gql"),'r').read()
+        query = query.replace("$pipe_id$",pipe_id)
+
+        data = self.runQuery(query)
+        phases = data.get("data").get("pipe").get("phases")
+
+        return [Phase(self,phase["id"],phase["name"]) for phase in phases]
+
+    def getPhase(self,phase_id):
+
+        query = open(os.path.join(self.graph_folder,"get_phase.gql"),'r').read()
+        query = query.replace("$phase_id$",phase_id)
+
+        data = self.runQuery(query)
+        phase = data.get("data").get("phase")
+        phase = Phase(self,phase["id"],phase["name"])
+
+        return phase
+
+    def pipeLabels(self,pipe_id):
 
         query = open(os.path.join(self.graph_folder,"listPipeLabels.gql"),'r').read()
         query = query.replace("$pipe_id$",pipe_id)
@@ -91,7 +112,7 @@ class Pipefy:
 
         return data.get("data").get("pipe").get("labels")
     
-    def listPhaseFormFields(self,phase_id):
+    def phaseFormFields(self,phase_id):
 
         query = open(os.path.join(self.graph_folder,"listPhaseFormFields.gql"),'r').read()
         query = query.replace("$phase_id$",phase_id)
@@ -100,7 +121,7 @@ class Pipefy:
 
         return data.get("data").get("phase").get("fields")
     
-    def listCardsFromPhase(self,phase_id,nextPage=None,format_fields=True):
+    def cardsFromPhase(self,phase_id,nextPage=None,format_fields=True):
         
         nextPage = f'"{nextPage}"' if nextPage else 'null'
         query = open(os.path.join(self.graph_folder,"listCardsFromPhase.gql"),'r').read()
@@ -112,13 +133,24 @@ class Pipefy:
         cards = data["data"]["phase"]["cards"]
         next_page = cards["pageInfo"]["hasNextPage"]
         cards_filtered = [x.get("node") for x in cards["edges"]]
-        cards_filtered = [Card(self,card["id"],card["title"],card["created_at"],User(id=card["createdBy"]["id"],name=card["createdBy"]["name"]),card.get("due_date")) for card in cards_filtered]
+        cards_filtered = [
+            Card(
+                self,
+                card["id"],
+                card["title"],
+                card["created_at"],
+                User(id=card["createdBy"]["id"],name=card["createdBy"]["name"]),
+                Phase(self,card["current_phase"]["id"],card["current_phase"]["name"]),
+                card.get("due_date")
+            ) 
+            for card in cards_filtered
+            ]
         if next_page:
             return cards_filtered+self.listCardsFromPhase(phase_id=phase_id,nextPage=cards["pageInfo"]["endCursor"])
         
         return cards_filtered
 
-    def listMembers(self):
+    def members(self):
         query = open(os.path.join(self.graph_folder,"listMembers.gql"),'r').read()
         query = query.replace("$org_id$",self.org_id)
         data = self.runQuery(query)["data"]["organizations"]
@@ -188,6 +220,7 @@ class Pipefy:
                 card["title"],
                 card["created_at"],
                 User(id=card["createdBy"]["id"],name=card["createdBy"]["name"]),
+                Phase(self,card["current_phase"]["id"],card["current_phase"]["name"]),
                 card.get("due_date")
             ))
 

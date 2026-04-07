@@ -6,6 +6,14 @@
 pip install pipefyUts
 ```
 
+### Dependencies
+
+This package requires the following dependencies:
+- requests
+- python-dateutil
+
+These are automatically installed when you install pipefyUts via pip.
+
 ## GitHub
 https://github.com/ZdekPyPi/PipefyUts
 
@@ -139,9 +147,63 @@ pfy.createCard(card=myNewCard)
 {"id":"card_id"}
 ```
 
-## deleteCard
+## Card Manipulation
+
+### Get a Card
 ```py
+card = pfy.getCard(card_id="<card_id>")
+```
 
-pfy.deleteCard(card_id="<card_id>")
+### Move Card to Phase
+```py
+card.move(phase_id="<phase_id>")
+```
 
+### Delete Card
+```py
+card.delete()
+```
+
+### Get Card Fields
+```py
+fields = card.fields()
+```
+##### output
+```json
+{"field_id_1": "value1", "field_id_2": "value2", ...}
+```
+
+### Update Field Value
+```py
+card.updateFieldValue(field_id="<field_id>", value="<new_value>")
+```
+
+### Add Labels
+```py
+card.addLabels(label_ids=["<label_id1>", "<label_id2>"])
+```
+
+### Remove Labels
+```py
+card.removeLabels(label_ids=["<label_id1>", "<label_id2>"])
+```
+
+### Remove All Labels
+```py
+card.removeAllLabels()
+```
+
+### Get Comments
+```py
+comments = card.comments()
+```
+
+### Add Comment
+```py
+comment = card.newComment(text="<comment_text>")
+```
+
+### Get Labels
+```py
+labels = card.labels()
 ```

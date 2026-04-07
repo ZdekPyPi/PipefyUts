@@ -1,7 +1,7 @@
 import pathlib
 import os
 from dateutil.parser import isoparse
-from .models import User,Comment,Label
+from .models import User,Comment,Label,Phase
 import json
 
 graph_folder = os.path.join(pathlib.Path(__file__).parent.resolve(),"graphql")
@@ -128,39 +128,32 @@ class Card:
     created_by = None
     labels     = None
     due_date   = None
+    phase      = None
     id         = None
 
 
-    def __init__(self,pfy,card_id:str,title:str,created_at:str,created_by:User,due_date:str=None):
+    def __init__(self,pfy,card_id:str,title:str,created_at:str,created_by:User,phase:Phase,due_date:str=None):
         self.__pfy__    = pfy
         self.id         = card_id
         self.title      = title
         self.created_at = isoparse(created_at)
         self.created_by = created_by
+        self.phase      = phase
         self.due_date   = isoparse(due_date) if due_date else None
 
         pass
-
-    def newComment(self,text):
-        query = open(os.path.join(graph_folder,"newComment.gql"),'r').read()
-        query = query.replace("$card_id$",self.id)
-        query = query.replace("$text$",text)
-
-        data = self.__pfy__.runQuery(query)
-        self.comments = [Comment(self.__pfy__,data["data"]["createComment"]["comment"])] + self.comments
-        return self.comments[0]
     
-    def moveToPhase(self,phase_id):
-        self.__pfy__.moveCard(self.id,phase_id)
+    #=============================================== CARD ACTIONS ===========================================
 
-    def comments(self):
-        query = open(os.path.join(graph_folder,"card_comments.gql"),'r').read()
-        query = query.replace("$card_id$",self.id)
+    def delete(self):
+        query = f'mutation {{ N0 :deleteCard(input:{{id: "{self.id}"}}){{ clientMutationId }}}}'
+        return self.__pfy__.runQuery(query)["data"]["N0"]["clientMutationId"]
 
-        data = self.__pfy__.runQuery(query)
-        comments = [Comment(self.__pfy__,x['id'],User(id=x['author']['id'],name=x['author']['name']),x['created_at'],x['text']) for x in data["data"]["card"]["comments"]]
-        return comments
+    def move(self,phase_id:str):
+        query = f'mutation {{moveCardToPhase(input: {{card_id: "{self.id}", destination_phase_id: "{phase_id}"}}){{card{{id}}}}}}'
+        return self.__pfy__.runQuery(query)
 
+    #=============================================== FIELDS =================================================    
     def fields(self):
         query = open(os.path.join(graph_folder,"card_fields.gql"),'r').read()
         query = query.replace("$card_id$",self.id)
@@ -168,6 +161,47 @@ class Card:
         data = self.__pfy__.runQuery(query)
         fields     = {x['field']['id']:x['value'] for x in data["data"]["card"]["fields"]}
         return fields
+
+    def updateFieldValue(self,field_id:str,value):
+        val = f'"{value}"' if isinstance(value,str) else value
+        val = json.dumps(val) if isinstance(val,list) else val
+        query = f'mutation {{updateFieldsValues(input: {{nodeId: "{self.id}", values: [{{fieldId: "{field_id}", value: {val}}}]}}){{success}}}}'
+        return self.__pfy__.runQuery(query)
+    
+    def refresh(self):
+        card = self.__pfy__.getCard(self.id)
+        self.title      = card.title
+        self.created_at = card.created_at
+        self.created_by = card.created_by
+        self.phase      = card.phase
+        self.due_date   = card.due_date
+        return self
+
+    def fields_from_phase(self,phase_id:str):
+        phase = self.__pfy__.getPhase(phase_id)
+        return phase.fields_from_card(self)
+
+    #================================================ COMMENTS ===============================================
+    def comments(self):
+        query = open(os.path.join(graph_folder,"card_comments.gql"),'r').read()
+        query = query.replace("$card_id$",self.id)
+
+        data = self.__pfy__.runQuery(query)
+        raw_comments = data["data"]["card"]["comments"]
+        comments = [Comment(self.__pfy__,x['id'],User(id=x['author']['id'],name=x['author']['name']),x['created_at'],x['text']) for x in raw_comments]
+        return comments
+
+    def newComment(self,text):
+        query = open(os.path.join(graph_folder,"newComment.gql"),'r').read()
+        query = query.replace("$card_id$",self.id)
+        query = query.replace("$text$",text)
+
+        data        = self.__pfy__.runQuery(query)
+        raw_comment = data["data"]["createComment"]["comment"]
+        comment     = Comment(self.__pfy__,raw_comment)
+        return comment
+
+    #================================================ LABELS =================================================
 
     def labels(self):
         query = open(os.path.join(graph_folder,"card_labels.gql"),'r').read()
@@ -177,31 +211,52 @@ class Card:
         labels     = [Label(self.__pfy__,x['id'],x['name'],x['color']) for x in data["data"]["card"]["labels"]]
         return labels
     
-    def deleteCard(self):
-        query = f'mutation {{ N0 :deleteCard(input:{{id: "{self.id}"}}){{ clientMutationId }}}}'
-        return self.__pfy__.runQuery(query)["data"]["N0"]["clientMutationId"]
+    def addLabels(self,label_ids:list[int|str]):
+        global graph_folder
+        #AJUSTA FORMATOS
+        label_ids = [str(x) for x in label_ids]
 
-    def moveCard(self,phase_id:str):
-        query = f'mutation {{moveCardToPhase(input: {{card_id: "{self.id}", destination_phase_id: "{phase_id}"}}){{card{{id}}}}}}'
-        return self.__pfy__.runQuery(query)
-    
+        #GET CURRENT LABELS
+        current_labels = self.labels()
+        final_labels = list(set([x.id for x in current_labels] + label_ids))
 
-    def updateFieldValue(self,field_id:str,value):
-        val = f'"{value}"' if isinstance(value,str) else value
-        val = json.dumps(val) if isinstance(val,list) else val
-        query = f'mutation {{updateFieldsValues(input: {{nodeId: "{self.id}", values: [{{fieldId: "{field_id}", value: {val}}}]}}){{success}}}}'
-        return self.__pfy__.runQuery(query)
-    
-
-    def updateCardLabels(self,label_ids:list[int|str]):
-
-        query = open(os.path.join(self.graph_folder,"updateCardLabels.gql"),'r').read()
+        query = open(os.path.join(graph_folder,"edit_card_labels.gql"),'r').read()
         query = query.replace("$card_id$",self.id)
-        query = query.replace("$label_ids$",json.dumps(label_ids))
+        query = query.replace("$label_ids$",json.dumps(final_labels))
 
         data = self.__pfy__.runQuery(query)
 
         return "OK"
+
+    def removeLabels(self,label_ids:list[int|str]):
+        global graph_folder
+
+        #AJUSTA FORMATOS
+        label_ids = [str(x) for x in label_ids]
+        #GET CURRENT LABELS
+        current_labels = self.labels()
+        final_labels = list(set([x.id for x in current_labels if x.id not in label_ids]))
+
+
+        query = open(os.path.join(graph_folder,"edit_card_labels.gql"),'r').read()
+        query = query.replace("$card_id$",self.id)
+        query = query.replace("$label_ids$",json.dumps(final_labels))
+
+        data = self.__pfy__.runQuery(query)
+
+        return "OK"
+
+    def removeAllLabels(self):
+        global graph_folder
+
+        query = open(os.path.join(graph_folder,"edit_card_labels.gql"),'r').read()
+        query = query.replace("$card_id$",self.id)
+        query = query.replace("$label_ids$","[]")
+
+        data = self.__pfy__.runQuery(query)
+
+        return "OK"
+
 
     def __repr__(self):
         return f'Card<{self.id}>'

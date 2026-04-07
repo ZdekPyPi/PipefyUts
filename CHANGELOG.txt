@@ -1,10 +1,16 @@
 Change Log
 ==========
 
-1.0.0 (2024-04-26)
+1.1.7 (2026-04-07)
 ------------------
-- First Release
+- Fixed circular import issue between models.py and card.py
+- Added python-dateutil as a dependency
+- Removed unused import from typing_extensions
 
 1.0.9 (2024-07-25)
 ------------------
 - File spaces upload adjustment
+
+1.0.0 (2024-04-26)
+------------------
+- First Release

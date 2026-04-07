@@ -10,7 +10,7 @@ classifiers = [
  
 setup(
   name                          = 'pipefyUts',
-  version                       = '1.1.7',
+  version                       = '1.2.0',
   description                   = 'Pipefy manipulator',
   long_description              = open('README.md').read() + '\n\n' + open('CHANGELOG.txt').read(),
   long_description_content_type = 'text/markdown',
@@ -23,5 +23,5 @@ setup(
   packages                      = find_packages(),
   package_data                  = {'': ['*.gql']},
   include_package_data          = True,
-  install_requires              = ["requests"]
+  install_requires              = ["requests", "python-dateutil"]
 )

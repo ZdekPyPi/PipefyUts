@@ -12,10 +12,14 @@ query {
         title
         created_at
         createdBy {
-        id
-        name
-      }
+          id
+          name
+        }
         due_date
+        current_phase {
+          id
+          name
+      }
       }
     }
   }

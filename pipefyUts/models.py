@@ -1,7 +1,9 @@
+from __future__ import annotations
 from dataclasses import dataclass
 import pathlib
 import os
 from dateutil.parser import isoparse
+
 
 graph_folder = os.path.join(pathlib.Path(__file__).parent.resolve(),"graphql")
 
@@ -55,3 +57,34 @@ class Label:
 
     def __repr__(self):
         return f'Label<{self.name}>'
+
+
+class Phase:
+    __pfy__ = None
+
+    id   = None
+    name = None
+
+    def __init__(self,pfy,id:str,name:str):
+        self.__pfy__ = pfy
+        self.id      = id
+        self.name    = name
+    
+    def __repr__(self):
+        return f'Phase<{self.name}>'
+    
+    def formFields(self):
+        return self.__pfy__.phaseFormFields(self.id)
+    
+    def listCards(self):
+        return self.__pfy__.cardsFromPhase(self.id)
+    
+    def fields_from_card(self,card: Card):
+        my_fields = self.formFields()
+        card_fields = card.fields()
+
+        fields = {}
+        for field in my_fields:
+            if field['id'] in card_fields:
+                fields[field['id']] = card_fields[field['id']]
+        return fields
