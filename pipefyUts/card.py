@@ -79,7 +79,7 @@ class NewCard:
             setattr(self,item[0],item[1].default)
 
     def validateRequired(self,**kwargs):
-        if not "__title__" in self.__dir__(): raise Exception("please define __title__")
+        # if not "__title__" in self.__dir__(): raise Exception("please define __title__")
         if not "__pipeid__" in self.__dir__(): raise Exception("please define __pipeid__")
 
         my_fields = [(x,object.__getattribute__(self,x)) for x in self.__dir__() if isinstance(object.__getattribute__(self,x),CardField)]
