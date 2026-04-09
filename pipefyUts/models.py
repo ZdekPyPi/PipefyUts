@@ -60,6 +60,7 @@ class Label:
         return f'Label<{self.name}>'
 
 class Card:
+    __graph_folder__ = os.path.join(pathlib.Path(__file__).parent.resolve(),"graphql")
     __pfy__ = None
 
     created_at = None
@@ -93,7 +94,7 @@ class Card:
 
     #=============================================== FIELDS =================================================    
     def fields(self):
-        query = open(os.path.join(graph_folder,"card_fields.gql"),'r').read()
+        query = open(os.path.join(self.__graph_folder__,"card_fields.gql"),'r').read()
         query = query.replace("$card_id$",self.id)
 
         data = self.__pfy__.runQuery(query)
@@ -142,7 +143,7 @@ class Card:
     #================================================ LABELS =================================================
 
     def labels(self):
-        query = open(os.path.join(graph_folder,"card_labels.gql"),'r').read()
+        query = open(os.path.join(self.__graph_folder__,"card_labels.gql"),'r').read()
         query = query.replace("$card_id$",self.id)
 
         data = self.__pfy__.runQuery(query)
@@ -150,7 +151,6 @@ class Card:
         return labels
     
     def addLabels(self,label_ids:list[int|str]):
-        global graph_folder
         #AJUSTA FORMATOS
         label_ids = [str(x) for x in label_ids]
 
@@ -158,7 +158,7 @@ class Card:
         current_labels = self.labels()
         final_labels = list(set([x.id for x in current_labels] + label_ids))
 
-        query = open(os.path.join(graph_folder,"edit_card_labels.gql"),'r').read()
+        query = open(os.path.join(self.__graph_folder__,"edit_card_labels.gql"),'r').read()
         query = query.replace("$card_id$",self.id)
         query = query.replace("$label_ids$",json.dumps(final_labels))
 
@@ -167,7 +167,6 @@ class Card:
         return "OK"
 
     def removeLabels(self,label_ids:list[int|str]):
-        global graph_folder
 
         #AJUSTA FORMATOS
         label_ids = [str(x) for x in label_ids]
@@ -176,7 +175,7 @@ class Card:
         final_labels = list(set([x.id for x in current_labels if x.id not in label_ids]))
 
 
-        query = open(os.path.join(graph_folder,"edit_card_labels.gql"),'r').read()
+        query = open(os.path.join(self.__graph_folder__,"edit_card_labels.gql"),'r').read()
         query = query.replace("$card_id$",self.id)
         query = query.replace("$label_ids$",json.dumps(final_labels))
 
@@ -185,9 +184,8 @@ class Card:
         return "OK"
 
     def removeAllLabels(self):
-        global graph_folder
 
-        query = open(os.path.join(graph_folder,"edit_card_labels.gql"),'r').read()
+        query = open(os.path.join(self.__graph_folder__,"edit_card_labels.gql"),'r').read()
         query = query.replace("$card_id$",self.id)
         query = query.replace("$label_ids$","[]")
 

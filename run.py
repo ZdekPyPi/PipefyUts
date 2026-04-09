@@ -15,6 +15,9 @@ pfy = Pipefy(ORG_ID,TOKEN)
 pipe = pfy.getPipe(pipe_id="307077421")
 pipe2 = pfy.getPipe(pipe_id="306528137")
 
+pipe.findCards(field_id="nome",field_value="Pedro")
+
+
 pfy.phasesFromPipe("307077421")[0].cards()
 
 card = pfy.getCard(card_id="1325994562")
