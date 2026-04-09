@@ -1,0 +1,6 @@
+query {
+  pipe(id: $pipe_id$) {
+    id
+    name
+  }
+}

@@ -3,6 +3,7 @@ import json
 import os
 import pathlib
 from .card import *
+from .models import *
 from urllib.parse import unquote,urlparse
 
 
@@ -11,7 +12,7 @@ urllib3.disable_warnings()
 
 class Pipefy:
     url          = "https://api.pipefy.com/graphql"
-    graph_folder = os.path.join(pathlib.Path(__file__).parent.resolve(),"graphql")
+    __graph_folder__ = os.path.join(pathlib.Path(__file__).parent.resolve(),"graphql")
     
     def __init__(self,org_id,token):
         self.org_id = org_id
@@ -31,7 +32,7 @@ class Pipefy:
         return req.json()
 
     def presignedUrl(self,file_name:str)->str:
-        query = open(os.path.join(self.graph_folder,"presignedUrl.gql"),'r').read()
+        query = open(os.path.join(self.__graph_folder__,"presignedUrl.gql"),'r').read()
         query = query.replace("$org_id$",self.org_id)
         query = query.replace("$file_name$",file_name)
 
@@ -55,18 +56,9 @@ class Pipefy:
 
         return unquote(url.split("?")[0].replace("https://pipefy-prd-us-east-1.s3.amazonaws.com/",""))
 
-    def startFormFields(self,pipe_id):
-
-        query = open(os.path.join(self.graph_folder,"listStartFormFields.gql"),'r').read()
-        query = query.replace("$pipe_id$",pipe_id)
-
-        data = self.runQuery(query)
-
-        return data.get("data").get("pipe").get("start_form_fields")
-    
     def getCard(self,card_id):
 
-        query = open(os.path.join(self.graph_folder,"getCard.gql"),'r').read()
+        query = open(os.path.join(self.__graph_folder__,"getCard.gql"),'r').read()
         query = query.replace("$card_id$",card_id)
 
         data = self.runQuery(query)
@@ -83,18 +75,9 @@ class Pipefy:
 
         return card
 
-    def phasesFromPipe(self,pipe_id):
-        query = open(os.path.join(self.graph_folder,"phases_from_pipe.gql"),'r').read()
-        query = query.replace("$pipe_id$",pipe_id)
-
-        data = self.runQuery(query)
-        phases = data.get("data").get("pipe").get("phases")
-
-        return [Phase(self,phase["id"],phase["name"]) for phase in phases]
-
     def getPhase(self,phase_id):
 
-        query = open(os.path.join(self.graph_folder,"get_phase.gql"),'r').read()
+        query = open(os.path.join(self.__graph_folder__,"get_phase.gql"),'r').read()
         query = query.replace("$phase_id$",phase_id)
 
         data = self.runQuery(query)
@@ -103,55 +86,18 @@ class Pipefy:
 
         return phase
 
-    def pipeLabels(self,pipe_id):
-
-        query = open(os.path.join(self.graph_folder,"listPipeLabels.gql"),'r').read()
+    def getPipe(self,pipe_id):
+        query = open(os.path.join(self.__graph_folder__,"get_pipe.gql"),'r').read()
         query = query.replace("$pipe_id$",pipe_id)
 
         data = self.runQuery(query)
+        pipe = data.get("data").get("pipe")
+        pipe = Pipe(self,pipe["id"],pipe["name"])
 
-        return data.get("data").get("pipe").get("labels")
-    
-    def phaseFormFields(self,phase_id):
-
-        query = open(os.path.join(self.graph_folder,"listPhaseFormFields.gql"),'r').read()
-        query = query.replace("$phase_id$",phase_id)
-
-        data = self.runQuery(query)
-
-        return data.get("data").get("phase").get("fields")
-    
-    def cardsFromPhase(self,phase_id,nextPage=None,format_fields=True):
-        
-        nextPage = f'"{nextPage}"' if nextPage else 'null'
-        query = open(os.path.join(self.graph_folder,"listCardsFromPhase.gql"),'r').read()
-        query = query.replace("$phase_id$",phase_id)
-        query = query.replace("$after$",nextPage)
-
-        data = self.runQuery(query)
-    
-        cards = data["data"]["phase"]["cards"]
-        next_page = cards["pageInfo"]["hasNextPage"]
-        cards_filtered = [x.get("node") for x in cards["edges"]]
-        cards_filtered = [
-            Card(
-                self,
-                card["id"],
-                card["title"],
-                card["created_at"],
-                User(id=card["createdBy"]["id"],name=card["createdBy"]["name"]),
-                Phase(self,card["current_phase"]["id"],card["current_phase"]["name"]),
-                card.get("due_date")
-            ) 
-            for card in cards_filtered
-            ]
-        if next_page:
-            return cards_filtered+self.listCardsFromPhase(phase_id=phase_id,nextPage=cards["pageInfo"]["endCursor"])
-        
-        return cards_filtered
+        return pipe
 
     def members(self):
-        query = open(os.path.join(self.graph_folder,"listMembers.gql"),'r').read()
+        query = open(os.path.join(self.__graph_folder__,"listMembers.gql"),'r').read()
         query = query.replace("$org_id$",self.org_id)
         data = self.runQuery(query)["data"]["organizations"]
         if not data:
@@ -161,7 +107,7 @@ class Pipefy:
         return [x.get("user") for x in data]
         
     def createCard(self,card:NewCard):
-        query = open(os.path.join(self.graph_folder,"createCard.gql"),'r').read()
+        query = open(os.path.join(self.__graph_folder__,"createCard.gql"),'r').read()
         query = query.replace("$title$",card.__title__)
         query = query.replace("$pipe_id$",card.__pipeid__)
 
@@ -201,29 +147,4 @@ class Pipefy:
                 file.write(chunk)
 
         return file_addr
-
-    def findCards(self,pipe_id,field_id:str,field_value:str):
-        query = open(os.path.join(self.graph_folder,"findCards.gql"),'r').read()
-        query = query.replace("$pipe_id$",pipe_id)
-        query = query.replace("$field_id$",field_id)
-        query = query.replace("$field_value$",field_value)
-
-        data = self.runQuery(query)
-        cards = data["data"]["findCards"]["edges"]
-
-        cards_to_return = []
-        for card in cards:
-            card = card.get("node")
-            cards_to_return.append(Card(
-                self,
-                card["id"],
-                card["title"],
-                card["created_at"],
-                User(id=card["createdBy"]["id"],name=card["createdBy"]["name"]),
-                Phase(self,card["current_phase"]["id"],card["current_phase"]["name"]),
-                card.get("due_date")
-            ))
-
-
-        return cards_to_return
 

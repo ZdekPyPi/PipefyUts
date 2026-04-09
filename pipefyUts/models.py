@@ -2,10 +2,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 import pathlib
 import os
+import json
 from dateutil.parser import isoparse
 
 
-graph_folder = os.path.join(pathlib.Path(__file__).parent.resolve(),"graphql")
 
 @dataclass
 class User:
@@ -14,6 +14,7 @@ class User:
 
 
 class Comment:
+    __graph_folder__ = os.path.join(pathlib.Path(__file__).parent.resolve(),"graphql")
     __pfy__ = None
     
     id          = None
@@ -33,7 +34,7 @@ class Comment:
         pass
 
     def delete(self):
-        query = open(os.path.join(graph_folder,"deleteComment.gql"),'r').read()
+        query = open(os.path.join(self.__graph_folder__,"deleteComment.gql"),'r').read()
         query = query.replace("$comment_id$",self.id)
         self.__pfy__.runQuery(query)
         
@@ -58,8 +59,151 @@ class Label:
     def __repr__(self):
         return f'Label<{self.name}>'
 
+class Card:
+    __pfy__ = None
+
+    created_at = None
+    created_by = None
+    labels     = None
+    due_date   = None
+    phase      = None
+    id         = None
+
+
+    def __init__(self,pfy,card_id:str,title:str,created_at:str,created_by:User,phase:Phase,due_date:str=None):
+        self.__pfy__    = pfy
+        self.id         = card_id
+        self.title      = title
+        self.created_at = isoparse(created_at)
+        self.created_by = created_by
+        self.phase      = phase
+        self.due_date   = isoparse(due_date) if due_date else None
+
+        pass
+    
+    #=============================================== CARD ACTIONS ===========================================
+
+    def delete(self):
+        query = f'mutation {{ N0 :deleteCard(input:{{id: "{self.id}"}}){{ clientMutationId }}}}'
+        return self.__pfy__.runQuery(query)["data"]["N0"]["clientMutationId"]
+
+    def move(self,phase_id:str):
+        query = f'mutation {{moveCardToPhase(input: {{card_id: "{self.id}", destination_phase_id: "{phase_id}"}}){{card{{id}}}}}}'
+        return self.__pfy__.runQuery(query)
+
+    #=============================================== FIELDS =================================================    
+    def fields(self):
+        query = open(os.path.join(graph_folder,"card_fields.gql"),'r').read()
+        query = query.replace("$card_id$",self.id)
+
+        data = self.__pfy__.runQuery(query)
+        fields     = {x['field']['id']:x['value'] for x in data["data"]["card"]["fields"]}
+        return fields
+
+    def updateFieldValue(self,field_id:str,value):
+        val = f'"{value}"' if isinstance(value,str) else value
+        val = json.dumps(val) if isinstance(val,list) else val
+        query = f'mutation {{updateFieldsValues(input: {{nodeId: "{self.id}", values: [{{fieldId: "{field_id}", value: {val}}}]}}){{success}}}}'
+        return self.__pfy__.runQuery(query)
+    
+    def refresh(self):
+        card = self.__pfy__.getCard(self.id)
+        self.title      = card.title
+        self.created_at = card.created_at
+        self.created_by = card.created_by
+        self.phase      = card.phase
+        self.due_date   = card.due_date
+        return self
+
+    def fields_from_phase(self,phase_id:str):
+        phase = self.__pfy__.getPhase(phase_id)
+        return phase.fields_from_card(self)
+
+    #================================================ COMMENTS ===============================================
+    def comments(self):
+        query = open(os.path.join(graph_folder,"card_comments.gql"),'r').read()
+        query = query.replace("$card_id$",self.id)
+
+        data = self.__pfy__.runQuery(query)
+        raw_comments = data["data"]["card"]["comments"]
+        comments = [Comment(self.__pfy__,x['id'],User(id=x['author']['id'],name=x['author']['name']),x['created_at'],x['text']) for x in raw_comments]
+        return comments
+
+    def newComment(self,text):
+        query = open(os.path.join(graph_folder,"newComment.gql"),'r').read()
+        query = query.replace("$card_id$",self.id)
+        query = query.replace("$text$",text)
+
+        data        = self.__pfy__.runQuery(query)
+        raw_comment = data["data"]["createComment"]["comment"]
+        comment     = Comment(self.__pfy__,raw_comment)
+        return comment
+
+    #================================================ LABELS =================================================
+
+    def labels(self):
+        query = open(os.path.join(graph_folder,"card_labels.gql"),'r').read()
+        query = query.replace("$card_id$",self.id)
+
+        data = self.__pfy__.runQuery(query)
+        labels     = [Label(self.__pfy__,x['id'],x['name'],x['color']) for x in data["data"]["card"]["labels"]]
+        return labels
+    
+    def addLabels(self,label_ids:list[int|str]):
+        global graph_folder
+        #AJUSTA FORMATOS
+        label_ids = [str(x) for x in label_ids]
+
+        #GET CURRENT LABELS
+        current_labels = self.labels()
+        final_labels = list(set([x.id for x in current_labels] + label_ids))
+
+        query = open(os.path.join(graph_folder,"edit_card_labels.gql"),'r').read()
+        query = query.replace("$card_id$",self.id)
+        query = query.replace("$label_ids$",json.dumps(final_labels))
+
+        data = self.__pfy__.runQuery(query)
+
+        return "OK"
+
+    def removeLabels(self,label_ids:list[int|str]):
+        global graph_folder
+
+        #AJUSTA FORMATOS
+        label_ids = [str(x) for x in label_ids]
+        #GET CURRENT LABELS
+        current_labels = self.labels()
+        final_labels = list(set([x.id for x in current_labels if x.id not in label_ids]))
+
+
+        query = open(os.path.join(graph_folder,"edit_card_labels.gql"),'r').read()
+        query = query.replace("$card_id$",self.id)
+        query = query.replace("$label_ids$",json.dumps(final_labels))
+
+        data = self.__pfy__.runQuery(query)
+
+        return "OK"
+
+    def removeAllLabels(self):
+        global graph_folder
+
+        query = open(os.path.join(graph_folder,"edit_card_labels.gql"),'r').read()
+        query = query.replace("$card_id$",self.id)
+        query = query.replace("$label_ids$","[]")
+
+        data = self.__pfy__.runQuery(query)
+
+        return "OK"
+
+
+    def __repr__(self):
+        return f'Card<{self.id}>'
+
+
+
 
 class Phase:
+    __graph_folder__ = os.path.join(pathlib.Path(__file__).parent.resolve(),"graphql")
     __pfy__ = None
 
     id   = None
@@ -76,8 +220,33 @@ class Phase:
     def formFields(self):
         return self.__pfy__.phaseFormFields(self.id)
     
-    def listCards(self):
-        return self.__pfy__.cardsFromPhase(self.id)
+    def cards(self,nextPage=None):
+        nextPage = f'"{nextPage}"' if nextPage else 'null'
+        query = open(os.path.join(self.__graph_folder__,"listCardsFromPhase.gql"),'r').read()
+        query = query.replace("$phase_id$",self.id)
+        query = query.replace("$after$",nextPage)
+
+        data = self.__pfy__.runQuery(query)
+    
+        cards = data["data"]["phase"]["cards"]
+        next_page = cards["pageInfo"]["hasNextPage"]
+        cards_filtered = [x.get("node") for x in cards["edges"]]
+        cards_filtered = [
+            Card(
+                self,
+                card["id"],
+                card["title"],
+                card["created_at"],
+                User(id=card["createdBy"]["id"],name=card["createdBy"]["name"]),
+                Phase(self,card["current_phase"]["id"],card["current_phase"]["name"]),
+                card.get("due_date")
+            ) 
+            for card in cards_filtered
+            ]
+        if next_page:
+            return cards_filtered+self.cards(phase_id=self.id,nextPage=cards["pageInfo"]["endCursor"])
+        
+        return cards_filtered
     
     def fields_from_card(self,card: Card):
         my_fields = self.formFields()
@@ -88,3 +257,70 @@ class Phase:
             if field['id'] in card_fields:
                 fields[field['id']] = card_fields[field['id']]
         return fields
+
+
+class Pipe:
+    __graph_folder__ = os.path.join(pathlib.Path(__file__).parent.resolve(),"graphql")
+    __pfy__ = None
+
+    id   = None
+    name = None
+
+    def __init__(self,pfy,id:str,name:str):
+        self.__pfy__ = pfy
+        self.id      = id
+        self.name    = name
+    
+    def __repr__(self):
+        return f'Pipe<{self.name}>'
+    
+    def startFormFields(self):
+        query = open(os.path.join(self.__graph_folder__,"listStartFormFields.gql"),'r').read()
+        query = query.replace("$pipe_id$",self.id)
+
+        data = self.__pfy__.runQuery(query)
+
+        return data.get("data").get("pipe").get("start_form_fields")
+    
+    def findCards(self,field_id:str,field_value:str):
+        query = open(os.path.join(self.__graph_folder__,"findCards.gql"),'r').read()
+        query = query.replace("$pipe_id$",self.id)
+        query = query.replace("$field_id$",field_id)
+        query = query.replace("$field_value$",field_value)
+
+        data = self.__pfy__.runQuery(query)
+        cards = data["data"]["findCards"]["edges"]
+
+        cards_to_return = []
+        for card in cards:
+            card = card.get("node")
+            cards_to_return.append(Card(
+                self.__pfy__,
+                card["id"],
+                card["title"],
+                card["created_at"],
+                User(id=card["createdBy"]["id"],name=card["createdBy"]["name"]),
+                Phase(self.__pfy__,card["current_phase"]["id"],card["current_phase"]["name"]),
+                card.get("due_date")
+            ))
+
+
+        return cards_to_return
+
+    def phases(self):
+        query = open(os.path.join(self.__graph_folder__,"phases_from_pipe.gql"),'r').read()
+        query = query.replace("$pipe_id$",self.id)
+
+        data = self.__pfy__.runQuery(query)
+        phases = data.get("data").get("pipe").get("phases")
+
+        return [Phase(self.__pfy__,phase["id"],phase["name"]) for phase in phases]
+    
+    def labels(self):
+        query = open(os.path.join(self.__graph_folder__,"listPipeLabels.gql"),'r').read()
+        query = query.replace("$pipe_id$",self.id)
+
+        data = self.__pfy__.runQuery(query)
+        labels = [Label(self.__pfy__,x['id'],x['name'],x['color']) for x in data["data"]["pipe"]["labels"]]
+
+        return labels

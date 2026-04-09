@@ -4,6 +4,7 @@ query{
       edges {
         node {
           id
+          title
           created_at
           createdBy {
             id

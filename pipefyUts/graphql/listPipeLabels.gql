@@ -1,1 +1,1 @@
-query { pipe(id: "$pipe_id$") { labels { id name } } } 
+query { pipe(id: "$pipe_id$") { labels { id name color} } } 

@@ -12,6 +12,11 @@ TOKEN  = os.getenv("TOKEN")
 
 pfy = Pipefy(ORG_ID,TOKEN)
 
+pipe = pfy.getPipe(pipe_id="307077421")
+pipe2 = pfy.getPipe(pipe_id="306528137")
+
+pfy.phasesFromPipe("307077421")[0].cards()
+
 card = pfy.getCard(card_id="1325994562")
 card.fields_from_phase('342691118')
 
