@@ -242,7 +242,7 @@ class Phase:
             for card in cards_filtered
             ]
         if next_page:
-            return cards_filtered+self.cards(phase_id=self.id,nextPage=cards["pageInfo"]["endCursor"])
+            return cards_filtered+self.cards(nextPage=cards["pageInfo"]["endCursor"])
         
         return cards_filtered
     
