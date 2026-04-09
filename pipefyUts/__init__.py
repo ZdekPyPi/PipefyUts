@@ -130,7 +130,9 @@ class Pipefy:
         query = query.replace("$fields$",fields)
         query = query.replace('"null"',"null")
 
-        return self.runQuery(query)["data"]["createCard"]["card"]
+        response = self.runQuery(query)["data"]["createCard"]["card"]
+
+        return self.getCard(response["id"])
 
     def downloadFile(self, file_path,destination):
         req = requests.get(file_path,headers=self.headers,stream=True,verify=False)

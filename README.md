@@ -1,5 +1,5 @@
 # PipefyUts
-#
+
 ### Installation
 
 ```sh
@@ -12,198 +12,150 @@ This package requires the following dependencies:
 - requests
 - python-dateutil
 
-These are automatically installed when you install pipefyUts via pip.
+These are automatically installed when you install `pipefyUts` via pip.
 
 ## GitHub
 https://github.com/ZdekPyPi/PipefyUts
 
-
 ## Usage
 
-<!-- //==================================================== -->
-## Auth
-##### python code
+### Authentication
+
 ```py
 from pipefyUts import Pipefy
 
-ORG_ID =  "<your_org_id>"
-TOKEN  = "<your_token>"
+ORG_ID = "<your_org_id>"
+TOKEN = "<your_token>"
 
-pfy = Pipefy(ORG_ID,TOKEN)
-
+pfy = Pipefy(ORG_ID, TOKEN)
 ```
 
-<!-- //==================================================== -->
-## listMembers
+## Core methods
+
+### List organization members
+
 ```py
-
-pfy.listMembers()
-
+members = pfy.members()
 ```
-##### output
-```json
-[
-    {"id":1,"name":"name_1","email":"email_1@email.com"},
-    {"id":2,"name":"name_2","email":"email_2@email.com"},
-    {"id":3,"name":"name_3","email":"email_3@email.com"},
-    {"id":4,"name":"name_4","email":"email_4@email.com"}
-]
 
-```
-<!-- //==================================================== -->
-## listStartFormFields
+### Upload attachment
+
 ```py
-
-pfy.listStartFormFields(pipe_id="<pipe_id>")
-
-```
-##### output
-```json
-[
-    {"id":"field_1","label":"field_label_1"},
-    {"id":"field_2","label":"field_label_2"},
-    {"id":"field_3","label":"field_label_3"},
-    {"id":"field_4","label":"field_label_4"}
-]
+attachment_path = pfy.createAttachment(file_path="path/to/file.txt")
 ```
 
-<!-- //==================================================== -->
-## listCardsFromPhase
+### Download file
+
 ```py
-
-pfy.listCardsFromPhase(phase_id="<phase_id>")
-
-```
-##### output
-```json
-[
-    {"id":"card_id_1","fields":[{...},{...},{...},...]},
-    {"id":"card_id_2","fields":[{...},{...},{...},...]},
-    {"id":"card_id_3","fields":[{...},{...},{...},...]},
-    {"id":"card_id_4","fields":[{...},{...},{...},...]}
-]
-
-```
-<!-- //==================================================== -->
-## createAttachment
-```py
-
-path = pfy.createAttachment(file_path="<my_file>")
-
-```
-##### output
-```py
-"orgs/123456-1234-1234-1234-123asd5as1ad5s1/uploads/123ad3-123ddas-123cs-123da-asdc21cas21/my_file.txt"
-
+downloaded = pfy.downloadFile(file_path="https://...", destination=".")
 ```
 
+### Get a card
 
-
-## cardCreation
-### authentication first
-```py
-from pipefyUts import Pipefy,NewCard,CardField
-
-ORG_ID =  "<your_org_id>"
-TOKEN  = "<your_token>"
-
-pfy = Pipefy(ORG_ID,TOKEN)
-
-```
-### create card schema
-```py
-
-class MyCard(NewCard):
-    #DEFAULT
-    __pipeid__               = "<my_pipe_id>"
-    __title__                = "<card_title>"
-
-    #PIPEFY FIELDS
-    description              = CardField(str)
-    total_ammount            = CardField(float)
-    owners                   = CardField(list)
-    files                    = CardField(list,is_file_path=True)
-
-
-```
-### create card
-```py
-#CREATE CARD OBJECT
-myNewCard = MyCard(
-    description   = "AdtPro",
-    total_ammount = 123.46,
-    owners        = ["<owner_id>"],
-    files         = [r".\Doc1.pdf",r".\Doc2.txt"]
-)
-
-#RUN CARD CREATION
-pfy.createCard(card=myNewCard)
-
-```
-
-
-##### output
-```json
-{"id":"card_id"}
-```
-
-## Card Manipulation
-
-### Get a Card
 ```py
 card = pfy.getCard(card_id="<card_id>")
 ```
 
-### Move Card to Phase
+### Get a phase
+
+```py
+phase = pfy.getPhase(phase_id="<phase_id>")
+```
+
+### Get a pipe
+
+```py
+pipe = pfy.getPipe(pipe_id="<pipe_id>")
+```
+
+## Pipe operations
+
+```py
+pipe       = pfy.getPipe(pipe_id="<pipe_id>")
+fields     = pipe.startFormFields()
+cards      = pipe.cards()
+find_cards = pipe.findCards(field_id="cnpj", field_value="12.123.123/1234-12")
+phases     = pipe.phases()
+labels     = pipe.labels()
+```
+
+## Phase operations
+
+```py
+phase = pfy.getPhase(phase_id="<phase_id>")
+cards = phase.cards()
+```
+
+## Card manipulation
+
+```py
+card = pfy.getCard(card_id="<card_id>")
+```
+
 ```py
 card.move(phase_id="<phase_id>")
-```
-
-### Delete Card
-```py
 card.delete()
+fields = card.fields()
+card.updateFieldValue(field_id="<field_id>", value="<new_value>")
+comments = card.comments()
+comment  = card.newComment(text="<comment_text>")
+labels   = card.labels()
+card.addLabels(label_ids=["<label_id1>", "<label_id2>"])
+card.removeLabels(label_ids=["<label_id1>", "<label_id2>"])
+card.removeAllLabels()
+card.refresh()
 ```
 
-### Get Card Fields
+### Example: card fields output
+
 ```py
 fields = card.fields()
 ```
-##### output
+
 ```json
-{"field_id_1": "value1", "field_id_2": "value2", ...}
+{"field_id_1": "value1", "field_id_2": "value2"}
 ```
 
-### Update Field Value
+## Create card using `NewCard`
+
 ```py
-card.updateFieldValue(field_id="<field_id>", value="<new_value>")
+from pipefyUts import Pipefy, NewCard, CardField
+
+ORG_ID = "<your_org_id>"
+TOKEN = "<your_token>"
+
+pfy = Pipefy(ORG_ID, TOKEN)
+
+class MyCard(NewCard):
+    __pipeid__ = "<my_pipe_id>"
+    __title__ = "<card_title>"
+
+    description = CardField(str)
+    total_ammount = CardField(float)
+    owners = CardField(list)
+    files = CardField(list, is_file_path=True)
+
+my_new_card = MyCard(
+    description="AdtPro",
+    total_ammount=123.46,
+    owners=["<owner_id>"],
+    files=[r".\Doc1.pdf", r".\Doc2.txt"]
+)
+
+created = pfy.createCard(card=my_new_card)
+print(created)
 ```
 
-### Add Labels
-```py
-card.addLabels(label_ids=["<label_id1>", "<label_id2>"])
+##### Example output
+
+```json
+Card<My_Card_Title>
 ```
 
-### Remove Labels
-```py
-card.removeLabels(label_ids=["<label_id1>", "<label_id2>"])
-```
+## `CardField` helpers
 
-### Remove All Labels
-```py
-card.removeAllLabels()
-```
-
-### Get Comments
-```py
-comments = card.comments()
-```
-
-### Add Comment
-```py
-comment = card.newComment(text="<comment_text>")
-```
-
-### Get Labels
-```py
-labels = card.labels()
-```
+- `CardField(str)` for text fields
+- `CardField(int)` for integer fields
+- `CardField(float)` for numeric fields
+- `CardField(list)` for list values
+- `CardField(list, is_file_path=True)` for list of file paths to upload
