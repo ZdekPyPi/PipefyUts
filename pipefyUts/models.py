@@ -11,6 +11,10 @@ from dateutil.parser import isoparse
 class User:
     id  : str
     name: str
+    email: str = None
+
+    def __repr__(self):
+        return f'User<{self.name}>'
 
 
 class Comment:

@@ -68,7 +68,7 @@ class Pipefy:
             card["id"],
             card["title"],
             card["created_at"],
-            User(id=card["createdBy"]["id"],name=card["createdBy"]["name"]),
+            User(id=card["createdBy"]["id"],name=card["createdBy"]["name"],email=card["createdBy"].get("email")),
             Phase(self,card["current_phase"]["id"],card["current_phase"]["name"]),
             card.get("due_date")
         )
@@ -104,7 +104,7 @@ class Pipefy:
             return None
         data = data[0]["members"]
 
-        return [x.get("user") for x in data]
+        return [User(id=x["user"]["id"],name=x["user"]["name"],email=x["user"].get("email")) for x in data]
         
     def createCard(self,card:NewCard):
         query = open(os.path.join(self.__graph_folder__,"createCard.gql"),'r').read()

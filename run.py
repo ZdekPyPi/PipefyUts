@@ -12,6 +12,8 @@ TOKEN  = os.getenv("TOKEN")
 
 pfy = Pipefy(ORG_ID,TOKEN)
 
+pfy.members()
+
 pipe = pfy.getPipe(pipe_id="307077421")
 pipe2 = pfy.getPipe(pipe_id="306528137")
 
