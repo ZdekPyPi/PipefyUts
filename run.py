@@ -12,7 +12,7 @@ TOKEN  = os.getenv("TOKEN")
 
 pfy = Pipefy(ORG_ID,TOKEN)
 
-pfy.getCard("1333730910").fields()
+pfy.getCard("1333730910").start_fields()
 
 pipe = pfy.getPipe("306528137")
 

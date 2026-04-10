@@ -65,6 +65,7 @@ class Pipefy:
         card = data.get("data").get("card")
         card = Card(
             self,
+            Pipe(self,card["pipe"]["id"],card["pipe"]["name"]),
             card["id"],
             card["title"],
             card["created_at"],

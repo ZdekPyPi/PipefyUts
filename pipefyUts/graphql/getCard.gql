@@ -1,5 +1,9 @@
 query {
   card(id: $card_id$) {
+    pipe {
+      id
+      name
+    }
     id
     title
     created_at

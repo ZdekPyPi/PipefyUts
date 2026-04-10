@@ -3,6 +3,10 @@ query{
     cards(after: $after$) {
       edges {
         node {
+          pipe {
+            id
+            name
+          }
           id
           title
           created_at

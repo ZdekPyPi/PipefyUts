@@ -1,12 +1,12 @@
 query{
     card(id:$card_id$){
-            fields {
-        field {
-          id
-          label
-          options
-          type
-        }
+        fields {
+          field {
+            id
+            label
+            options
+            type
+          }
         value
       }
     }

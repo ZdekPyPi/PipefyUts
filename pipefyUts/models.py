@@ -105,10 +105,12 @@ class Card:
     due_date   = None
     phase      = None
     id         = None
+    pipe       = None
 
 
-    def __init__(self,pfy,card_id:str,title:str,created_at:str,created_by:User,phase:Phase,due_date:str=None):
+    def __init__(self,pfy,pipe:Pipe,card_id:str,title:str,created_at:str,created_by:User,phase:Phase,due_date:str=None):
         self.__pfy__    = pfy
+        self.pipe       = pipe
         self.id         = card_id
         self.title      = title
         self.created_at = isoparse(created_at)
@@ -152,6 +154,14 @@ class Card:
         data = self.__pfy__.runQuery(query)
         fields     = {x['field']['id']:self.format_field_value(x) for x in data["data"]["card"]["fields"]}
         return fields
+
+    def start_fields(self):
+        pipe_start_fields = self.pipe.startFormFields()
+        all_fields = self.fields()
+
+        return { k:v for k,v in all_fields.items() if k in [y['id'] for y in pipe_start_fields]     }
+
+
 
     def updateFieldValue(self,field_id:str,value):
         val = f'"{value}"' if isinstance(value,str) else value
@@ -289,6 +299,7 @@ class Phase:
         cards_filtered = [
             Card(
                 self,
+                Pipe(self.__pfy__,card["pipe"]["id"],card["pipe"]["name"]),
                 card["id"],
                 card["title"],
                 card["created_at"],
@@ -351,6 +362,7 @@ class Pipe:
             card = card.get("node")
             cards_to_return.append(Card(
                 self.__pfy__,
+                Pipe(self.__pfy__,card["pipe"]["id"],card["pipe"]["name"]),
                 card["id"],
                 card["title"],
                 card["created_at"],
