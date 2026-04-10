@@ -4,6 +4,8 @@ import pathlib
 import os
 import json
 from dateutil.parser import isoparse
+import requests
+from urllib.parse import unquote, urlparse
 
 
 
@@ -63,6 +65,36 @@ class Label:
     def __repr__(self):
         return f'Label<{self.name}>'
 
+class Attachment:
+    __pfy__ = None
+
+    id   = None
+    name = None
+    url  = None
+
+    def __init__(self,pfy,url:str):
+        self.__pfy__ = pfy
+        self.url     = url
+    
+    def download(self,path:str):
+        req = requests.get(self.url,headers=self.__pfy__.headers,stream=True,verify=False)
+
+        #VERIFICA SE O REQUEST DEU ERRO
+        if req.status_code != 200:
+            raise Exception(req.text)
+        
+        file_name = urlparse(req.url).path.split("/")[-1]
+        file_addr = os.path.join(path, file_name)
+
+        with open(file_addr, "wb") as file:
+            for chunk in req.iter_content(1024):
+                file.write(chunk)
+
+        return file_addr
+
+    def __repr__(self):
+        return 'Attachment<{}>'.format(self.url.split("?")[0].split("/")[-1])
+
 class Card:
     __graph_folder__ = os.path.join(pathlib.Path(__file__).parent.resolve(),"graphql")
     __pfy__ = None
@@ -96,13 +128,29 @@ class Card:
         query = f'mutation {{moveCardToPhase(input: {{card_id: "{self.id}", destination_phase_id: "{phase_id}"}}){{card{{id}}}}}}'
         return self.__pfy__.runQuery(query)
 
+    def format_field_value(self,field_data:dict):
+        if field_data['field']['type'] == 'connector':
+            return eval(field_data["value"])
+        elif field_data['field']['type'] == 'attachment':
+            list_of_attachments = []
+            for url in eval(field_data["value"]):
+                list_of_attachments.append(Attachment(self.__pfy__,url))
+            return list_of_attachments
+        elif field_data['field']['type'] == 'assignee_select':
+            return eval(field_data["value"])
+        elif field_data['field']['type'] == 'label_select':
+            return eval(field_data["value"])
+        else:
+            return field_data['value']
+
+
     #=============================================== FIELDS =================================================    
     def fields(self):
         query = open(os.path.join(self.__graph_folder__,"card_fields.gql"),'r').read()
         query = query.replace("$card_id$",self.id)
 
         data = self.__pfy__.runQuery(query)
-        fields     = {x['field']['id']:x['value'] for x in data["data"]["card"]["fields"]}
+        fields     = {x['field']['id']:self.format_field_value(x) for x in data["data"]["card"]["fields"]}
         return fields
 
     def updateFieldValue(self,field_id:str,value):
@@ -126,7 +174,7 @@ class Card:
 
     #================================================ COMMENTS ===============================================
     def comments(self):
-        query = open(os.path.join(graph_folder,"card_comments.gql"),'r').read()
+        query = open(os.path.join(self.__graph_folder__,"card_comments.gql"),'r').read()
         query = query.replace("$card_id$",self.id)
 
         data = self.__pfy__.runQuery(query)
@@ -135,7 +183,7 @@ class Card:
         return comments
 
     def newComment(self,text):
-        query = open(os.path.join(graph_folder,"newComment.gql"),'r').read()
+        query = open(os.path.join(self.__graph_folder__,"newComment.gql"),'r').read()
         query = query.replace("$card_id$",self.id)
         query = query.replace("$text$",text)
 
@@ -220,7 +268,12 @@ class Phase:
         return f'Phase<{self.name}>'
     
     def formFields(self):
-        return self.__pfy__.phaseFormFields(self.id)
+        query = open(os.path.join(self.__graph_folder__,"listPhaseFormFields.gql"),'r').read()
+        query = query.replace("$phase_id$",self.id)
+
+        data = self.__pfy__.runQuery(query)
+
+        return data.get("data").get("phase").get("fields")
     
     def cards(self,nextPage=None):
         nextPage = f'"{nextPage}"' if nextPage else 'null'

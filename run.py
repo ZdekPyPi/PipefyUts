@@ -12,6 +12,15 @@ TOKEN  = os.getenv("TOKEN")
 
 pfy = Pipefy(ORG_ID,TOKEN)
 
+pfy.getCard("1333730910").fields()
+
+pipe = pfy.getPipe("306528137")
+
+pipe.phases()[0].formFields()
+
+pfy.getCard("1333730910").fields()
+[x for x in pipe.startFormFields() if x['id'] == "etiqueta_input_da_solicita_o"][0]
+
 pfy.members()
 
 pipe = pfy.getPipe(pipe_id="307077421")

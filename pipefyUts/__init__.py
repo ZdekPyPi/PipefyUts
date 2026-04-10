@@ -134,19 +134,4 @@ class Pipefy:
 
         return self.getCard(response["id"])
 
-    def downloadFile(self, file_path,destination):
-        req = requests.get(file_path,headers=self.headers,stream=True,verify=False)
-
-        #VERIFICA SE O REQUEST DEU ERRO
-        if req.status_code != 200:
-            raise Exception(req.text)
-        
-        file_name = urlparse(req.url).path.split("/")[-1]
-        file_addr = os.path.join(destination, file_name)
-
-        with open(file_addr, "wb") as file:
-            for chunk in req.iter_content(1024):
-                file.write(chunk)
-
-        return file_addr
 
