@@ -109,7 +109,7 @@ class Pipefy:
         
     def createCard(self,card:NewCard):
         query = open(os.path.join(self.__graph_folder__,"createCard.gql"),'r').read()
-        query = query.replace("$title$",card.__title__)
+        query = query.replace("$title$", card.__title__ if "__title__" in dir(card) else "null")
         query = query.replace("$pipe_id$",card.__pipeid__)
 
         fields = []
