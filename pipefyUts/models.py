@@ -298,13 +298,13 @@ class Phase:
         cards_filtered = [x.get("node") for x in cards["edges"]]
         cards_filtered = [
             Card(
-                self,
+                self.__pfy__,
                 Pipe(self.__pfy__,card["pipe"]["id"],card["pipe"]["name"]),
                 card["id"],
                 card["title"],
                 card["created_at"],
                 User(id=card["createdBy"]["id"],name=card["createdBy"]["name"]),
-                Phase(self,card["current_phase"]["id"],card["current_phase"]["name"]),
+                Phase(self.__pfy__,card["current_phase"]["id"],card["current_phase"]["name"]),
                 card.get("due_date")
             ) 
             for card in cards_filtered
