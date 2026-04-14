@@ -148,10 +148,6 @@ class Card:
         elif field_data['field']['type'] == 'number':
             return float(field_data["value"])
         else:
-            if field_data['field']['type'] not in ['short_text','radio_horizontal','phone']:
-                print(field_data['field']['type'])
-                print(field_data['value'])
-                pass
             return field_data['value']
 
 
