@@ -14,6 +14,8 @@ pfy = Pipefy(ORG_ID,TOKEN)
 
 
 crd = pfy.getCard("1192977879")
+
+crd.fields()
 att = crd.attachments()
 
 

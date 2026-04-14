@@ -6,6 +6,7 @@ import json
 from dateutil.parser import isoparse
 import requests
 from urllib.parse import unquote, urlparse
+from datetime import datetime
 
 
 
@@ -131,18 +132,26 @@ class Card:
         return self.__pfy__.runQuery(query)
 
     def format_field_value(self,field_data:dict):
-        if field_data['field']['type'] == 'connector':
-            return eval(field_data["value"])
-        elif field_data['field']['type'] == 'attachment':
+        if field_data['field']['type'] == 'attachment':
             list_of_attachments = []
             for url in eval(field_data["value"]):
                 list_of_attachments.append(Attachment(self.__pfy__,url))
             return list_of_attachments
-        elif field_data['field']['type'] == 'assignee_select':
+        elif field_data['field']['type'] in [ 'assignee_select','label_select','connector','checklist_vertical','checklist_horizontal']:
             return eval(field_data["value"])
-        elif field_data['field']['type'] == 'label_select':
-            return eval(field_data["value"])
+        elif field_data['field']['type'] == 'date':
+            return datetime.strptime(field_data["value"], "%d/%m/%Y").date()
+        elif field_data['field']['type'] == 'currency':
+            return float(field_data["value"].replace(",",""))
+        elif field_data['field']['type'] == 'due_date':
+            return datetime.strptime(field_data["value"], "%d/%m/%Y %H:%M") if field_data["value"] else None
+        elif field_data['field']['type'] == 'number':
+            return float(field_data["value"])
         else:
+            if field_data['field']['type'] not in ['short_text','radio_horizontal','phone']:
+                print(field_data['field']['type'])
+                print(field_data['value'])
+                pass
             return field_data['value']
 
 
