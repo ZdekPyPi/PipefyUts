@@ -259,6 +259,14 @@ class Card:
     def __repr__(self):
         return f'Card<{self.id}>'
 
+    def attachments(self):
+        fields = self.fields()
+        attachments = []
+        for field_id, value in fields.items():
+            if isinstance(value,list) and len(value) > 0 and isinstance(value[0],Attachment):
+                attachments += value
+        return attachments
+
 
 
 
