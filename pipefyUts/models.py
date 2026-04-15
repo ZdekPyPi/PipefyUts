@@ -132,6 +132,8 @@ class Card:
         return self.__pfy__.runQuery(query)
 
     def format_field_value(self,field_data:dict):
+        if not field_data["value"]: return None
+
         if field_data['field']['type'] == 'attachment':
             list_of_attachments = []
             for url in eval(field_data["value"]):
@@ -144,7 +146,7 @@ class Card:
         elif field_data['field']['type'] == 'currency':
             return float(field_data["value"].replace(",",""))
         elif field_data['field']['type'] == 'due_date':
-            return datetime.strptime(field_data["value"], "%d/%m/%Y %H:%M") if field_data["value"] else None
+            return datetime.strptime(field_data["value"], "%d/%m/%Y %H:%M")
         elif field_data['field']['type'] == 'number':
             return float(field_data["value"])
         else:
