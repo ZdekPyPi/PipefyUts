@@ -84,7 +84,7 @@ class Attachment:
         if req.status_code != 200:
             raise Exception(req.text)
         
-        file_name = urlparse(req.url).path.split("/")[-1]
+        file_name = self.file_name
         file_addr = os.path.join(path, file_name)
 
         with open(file_addr, "wb") as file:
@@ -92,9 +92,13 @@ class Attachment:
                 file.write(chunk)
 
         return file_addr
+    
+    @property
+    def file_name(self):
+        return urlparse(self.url).path.split("?")[0].split("/")[-1]
 
     def __repr__(self):
-        return 'Attachment<{}>'.format(self.url.split("?")[0].split("/")[-1])
+        return 'Attachment<{}>'.format(self.file_name)
 
 class Card:
     __graph_folder__ = os.path.join(pathlib.Path(__file__).parent.resolve(),"graphql")
